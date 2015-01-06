@@ -1,0 +1,458 @@
+<!DOCTYPE html> 
+<html lang="es"> 
+<head> 
+	<title>Pong</title>
+	<script type='text/javascript' src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+	<script src="jquery.timer.js" type="text/javascript"></script>
+	<link href="PongStyle.css" rel="stylesheet" type="text/css" />
+	<!--script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.1/jquery-ui.min.js"></script-->
+</head> 
+<body> 
+<script type="text/javascript" language="javascript">
+	$(document).ready(function(){
+		
+		$pelota = $('#pelota');
+		
+		//Posicion inicial de la pelota x - horizontal, y - vertical
+		pos_x = 400;
+		pos_y = 246;
+		
+		speedBall_x = 0;
+		speedBall_y = 0;
+		
+		pointJ1 = 0;
+		pointJ2 = 0;
+		
+		//ControlInicio si es 0, genera dos numeros aleatorios para que la direccion de la pelota no sea siempre la misma.
+		//Despues da la primera vez que se activa, pasa a ser uno, hasta que se reinicie el juego
+		controlInicio = 0;
+		
+		$('#pointPlayer1').html(pointJ1);
+		$('#pointPlayer2').html(pointJ2);
+		
+		//Colores iniciales de los jugadores.
+		//La pelota y la cancha se les da colores segun el clima que sea
+		$('#colorJ1').val('#0000FF');
+		$('#colorJ2').val('#FF3300');
+		
+		//El timer controla el cambio de posicion de la pelota, simulando el movimiento de la misma
+		//Desp de la funcion definida, tiene un numero(20) controla la velocidad de refresco y un boolean(true) controla si se autoinicia el timer
+		var timer = $.timer(function(){
+		
+			//Controlo que la velocidad de la pelota no sea mayor a 7, por que se hace muy complicado de jugar si es muy rapido
+			
+			if(speedBall_x >=7)
+			{
+				speedBall_x = 6;
+			}
+			
+			if(speedBall_y >=7)
+			{
+				speedBall_y = 5;
+			}
+			
+			//Control de rebote en la barra de jugador 2, se puede mejorar
+			if((pos_x >= 688 && pos_x <= 700)){
+				if(pos_y > pos2 && pos_y < pos2 + 100){
+					controlLat = 0;
+					speedBall_x += 1;
+					speedBall_y += 1;
+				}
+			}
+			
+			//Control de rebote en la barra de jugador 1, se puede mejorar
+			if((pos_x >= 100 && pos_x <=112)){
+				if(pos_y > pos1 && pos_y < pos1 +100){
+					controlLat = 1;
+					speedBall_x += 1;
+					speedBall_y += 1;
+				}
+			}
+		
+			//Se controla si rebota en las paredes superiores e inferiores
+			if((pos_y - speedBall_y) <= 48){
+				controlTop = 1;
+			}
+			if((pos_y + speedBall_y) >= 445){
+				controlTop = 0;
+			}
+			
+			//Controla si se convierte algun punto
+			if((pos_x - speedBall_x) <= 58){
+				controlLat = 0;
+				ganaPunto2();
+			}
+			if((pos_x + speedBall_x) >= 745){
+				controlLat = 1;
+				ganaPunto1();
+			}
+			
+			//Controla si es el primer movimiento de la pelota para darle otro tipo de movimiento. 
+			
+			if(controlInicio == 0){
+			
+				speedBall_x = 1 + Math.floor(Math.random() * 3);
+				speedBall_y = 1 + Math.floor(Math.random() * 3);
+				
+				controlInicio = 1;
+				
+				randomLado = 1 + Math.floor(Math.random() * 4);
+				controlLadoInicio(randomLado);
+				controlClima((1 + Math.floor(Math.random() * 3)));
+				
+			}
+			
+			acelerar();
+			
+			//Control jugador automatico
+			controlPlayerAI();
+			
+			//Imprime la posicion de la pelota en la pantalla
+			$pelota.css('top', pos_y + 'px');
+			$pelota.css('left', pos_x + 'px');
+			$barraJ2.css('top', pos2 + "px");
+			
+		},20,true);
+		
+		function controlPlayerAI()
+		{
+		    if (pos_x > 405) {
+		        if (pos_y < pos2) {
+		            if ((pos2 - speed) > 48) {
+		                pos2 -= speed;
+		            }
+		        }
+		        if (pos_y > (pos2 + 50)) {
+		            if ((pos2 + speed) < 355) {
+		                pos2 += speed;
+		            }
+		        }
+		    }
+		    else {
+		        if (pos2 < 200) {
+		            pos2 += speed;
+		        }
+		        if (pos2 > 200) {
+		            pos2 -= speed;
+		        }
+		    }
+		}
+		
+		//Suman un punto sea al jugador 1 o 2, y llaman al reset
+		function ganaPunto1(){
+			pointJ1 += 1;
+			reset();
+		}
+		function ganaPunto2(){
+			pointJ2 += 1;
+			reset();
+		}
+		
+		//Reinician la posicion y la velocidad de la pelota, como tambien el controlInicio
+		function reset(){
+			$('#gol').html("Gol!");
+			$('#gol').fadeIn();
+			$('#gol').fadeOut(1000);
+			$('#pointPlayer1').html(pointJ1.toString());
+			$('#pointPlayer2').html(pointJ2.toString());
+			//controlInicio = 0;
+			
+			speedBall_x = 1 + Math.floor(Math.random() * 3);
+			speedBall_y = 1 + Math.floor(Math.random() * 3);
+			
+			pos_x = 400;
+			pos_y = 250;
+			
+			controlTopGol((1 + Math.floor(Math.random() * 2)));
+		}
+		
+		//Controla que cuando se hace un gol, se mantenga el lado pero varie para donde sale
+		function controlTopGol(randomTop)
+		{
+			switch(randomTop)
+			{
+				case 1:
+					controlTop = 0;
+					break;
+				case 2:
+					controlTop = 1;
+					break;
+			}
+		}
+		
+		//Funcion que acelera la pelota
+		function acelerar()
+		{
+			if(controlTop == 0 && controlLat == 0){
+				pos_x -= speedBall_x;
+				pos_y -= speedBall_y;
+			}
+			if(controlTop == 1 && controlLat == 0){
+				pos_x -= speedBall_x;
+				pos_y += speedBall_y;
+			}
+			if(controlTop == 0 && controlLat == 1){
+				pos_x += speedBall_x;
+				pos_y -= speedBall_y;
+			}
+			if(controlTop == 1 && controlLat == 1){
+				pos_x += speedBall_x;
+				pos_y += speedBall_y;
+			}
+		}
+		
+		//Inicia la pelota en un lado aleatorio
+		function controlLadoInicio(ladoRandom)
+		{
+			switch(ladoRandom)
+			{
+				case 1:
+					controlTop = 0;
+					controlLat = 0;
+					break;
+				case 2:
+					controlTop = 1;
+					controlLat = 0;
+					break;
+				case 3:
+					controlTop = 0;
+					controlLat = 1;
+					break;
+				case 4:
+					controlTop = 1;
+					controlLat = 1;
+					break;
+			}
+		}
+		
+		//El clima cambia aleatoriamente entre partidas, con el cambio de clima cambia de color la cancha y la pelota
+		function controlClima(randomClima)
+		{
+			switch(randomClima)
+			{
+				case 1:
+				
+					//Soleado
+					$('#nombreClima').html("Soleado");
+					$('#colorP').val('#FFFFFF');
+					$('#colorC').val('#33AD33');
+					
+					//Seteo el css
+					$pelota.css('background', '#FFFFFF');
+					$('#cancha').css('background', '#33AD33');
+					$('#arco1').css('background', '#FFFFFF');
+					$('#arco2').css('background', '#FFFFFF');
+					$('#mitadCancha').css('background', '#FFFFFF');
+					$('#centroCancha').css('border', 'solid 1px white');
+					break;
+					
+				case 2:
+				
+					//Lluvia
+					$('#nombreClima').html("Lluvia");
+					$('#colorP').val('#FFFFFF');
+					$('#colorC').val('#809645');
+					//$('#colorC').val('#808040');
+					
+					//Seteo el css
+					$pelota.css('background', '#FFFFFF');
+					$('#cancha').css('background', '#809645');
+					$('#arco1').css('background', '#FFFFFF');
+					$('#arco2').css('background', '#FFFFFF');
+					$('#mitadCancha').css('background', '#FFFFFF');
+					$('#centroCancha').css('border', 'solid 1px white');
+					break;
+					
+				case 3:
+				
+					//Nieve
+					$('#nombreClima').html("Nieve");
+					$('#colorP').val('#FABD16');
+					$('#colorC').val('#F8F8F8');
+					
+					//Seteo el css
+					$pelota.css('background', '#FCBC0A');
+					$('#cancha').css('background', '#F8F8F8');
+					$('#arco1').css('background', '#000000');
+					$('#arco2').css('background', '#000000');
+					$('#mitadCancha').css('background', '#000000');
+					$('#centroCancha').css('border', 'solid 1px black');
+					break;
+			}
+		}
+		
+		//Datos y movimientos de los jugadores
+		
+		$barraJ1 = $('#barraJ1');
+		$barraJ2 = $('#barraJ2');
+		
+		//Pos 1 y 2 responden a las posiciones de las barras de los jugadores
+		pos1 = 200;
+		pos2 = 200;
+		
+		//Velocidad de movimiento de la barra
+		speed = 5;
+		
+		/*
+		//Jugador 2
+		$('body').keydown(function() {
+			switch(event.which) {
+				// 87 responde a la letra 'w'
+				case 87:
+					if((pos2-speed) > 48){
+						pos2 -= speed;
+						$barraJ2.css('top', pos2 + "px");
+					}
+					break;
+				// 83 responde a la letra 's'
+				case 83:
+					if((pos2+speed) < 355){
+						pos2 += speed;
+						$barraJ2.css('top', pos2 + "px");
+					}
+					break;
+			}
+			
+		});
+		*/
+		
+		//Ver si se cambian las teclas de las flechas por que si la pagina tiene barra de desplazamiento,
+		//las teclas mueven el contenido de la pagina
+		
+		//Jugador 1
+		$('body').keydown(function() {
+			switch(event.which) {
+			
+				// 38 responde a la flecha para arriba
+				case 38:
+					if((pos1-speed) > 48){
+						pos1 -= speed;
+						$barraJ1.css('top', pos1 + "px");
+					}
+					break;
+					
+				// 40 responde a la flecha para abajo
+				case 40:
+					if((pos1+speed) < 355){
+						pos1 += speed;
+						$barraJ1.css('top', pos1 + "px");
+					}
+					break;
+		
+			}
+		});
+		
+		
+		//controlPause es 0 si no esta pausado, es 1 si el juego esta pausado
+		controlPause = 0;
+		
+		speedBallAnt_x = 0;
+		speedBallAnt_y = 0;
+		
+		
+		$('body').keydown(function() {
+			switch(event.which) {
+			
+				// 80 responde a la letra 'p' y se usa para el pausado del juego
+				case 80:
+					if(controlPause == 0){
+					
+						controlPause = 1;
+						
+						speedBallAnt_x = speedBall_x;
+						speedBallAnt_y = speedBall_y;
+						
+						speedBall_x = 0;
+						speedBall_y = 0;
+						
+						$('#aviso').html("Pausa");
+						$('#reset').html("Presione R para Reset");
+					}
+					else
+					{
+						controlPause = 0;
+						
+						speedBall_x = speedBallAnt_x;
+						speedBall_y = speedBallAnt_y;
+						
+						$('#aviso').html("");
+						$('#reset').html("");
+					}
+					break;
+				
+				// 82 responde a la letra 'r' y llama a la funcion resetPartido
+				case 82:
+					if(controlPause==1){
+						controlPause = 0;
+						resetPartido();
+					}
+					break;
+			}
+		});
+		
+		//Resetea el puntaje del partido. Como si se volviera a comenzar
+		function resetPartido(){
+			$('#aviso').html("");
+			$('#reset').html("");
+			
+			pointJ1 = 0;
+			pointJ2 = 0;
+			
+			$('#pointPlayer1').html(pointJ1);
+			$('#pointPlayer2').html(pointJ2);
+			
+			pos_x = 400;
+			pos_y = 250;
+			controlInicio = 0;
+		}
+
+		//Funciones para controlar el cambio de colores en los input de tipo color, cambiando el color de las barras, la pelota y la cancha
+		$('#colorJ1').change(function(){
+			$('#barraJ1').css('background',$('#colorJ1').val());
+		});
+		$('#colorJ2').change(function(){
+			$('#barraJ2').css('background',$('#colorJ2').val());
+		});
+		$('#colorP').change(function(){
+			$('#pelota').css('background',$('#colorP').val());
+		});
+		$('#colorC').change(function(){
+			$('#cancha').css('background',$('#colorC').val());
+		});
+		
+	});
+</script>
+
+<div id="cancha" align="center">
+	<br>
+	<strong><span id="aviso"></span></strong><br>
+	<strong><span id="reset"></span></strong>
+	<strong><span id="gol"></span></strong>
+</div>
+<div id="mitadCancha"></div>
+<div id="centroCancha"></div>
+<div id="arco1"></div>
+<div id="arco2"></div>
+<div id='barraJ1'></div>
+<div id='barraJ2'></div>
+<div id='pelota'></div>
+<div id="resultado">
+	Puntos 1:&nbsp;<span id="pointPlayer1"></span> &nbsp;&nbsp;|&nbsp;&nbsp;
+	Puntos 2:&nbsp;<span id="pointPlayer2"></span>
+</div>
+<div id="clima">
+	<span id="nombreClima"></span>
+</div>
+<div id="colorChoice">
+	<form>
+		Color Jugador 1:&nbsp;&nbsp;<input type="color" name="color1" id="colorJ1"/>
+		<br>
+		Color Jugador 2:&nbsp;&nbsp;<input type="color" name="color2" id="colorJ2"/>
+		<br>
+		Color Pelota:&nbsp;&nbsp;<input type="color" name="colorP" id="colorP"/>
+		<br>
+		Color Cancha:&nbsp;&nbsp;<input type="color" name="colorC" id="colorC"/>
+	</form>
+</div>
+</body> 
+</html>
