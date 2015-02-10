@@ -9,6 +9,45 @@
 </head> 
 <body> 
 <script type="text/javascript" language="javascript">
+	
+	//Resetea el puntaje del partido. Como si se volviera a comenzar
+		function resetPartido(cantidad){
+			$('#aviso').html("");
+			$('#reset').html("");
+			
+			cantidadDeJugadores = cantidad;
+			
+			pointJ1 = 0;
+			pointJ2 = 0;
+			
+			keyPressP1 = 0;
+			keyPressP2 = 0;
+			
+			$('#pointPlayer1').html(pointJ1);
+			$('#pointPlayer2').html(pointJ2);
+			
+			if(cantidadDeJugadores == 1)
+		{
+			startTagP1 = "<b>";
+			endTagP1 = "</b>";
+			startTagP2 = "";
+			endTagP2 = "";
+		}
+		if(cantidadDeJugadores == 2)
+		{
+			startTagP1 = "";
+			endTagP1 = "";
+			startTagP2 = "<b>";
+			endTagP2 = "</b>";
+		}
+			
+		$('#control1o2').html('<span id="unJugador" onmouseup="resetPartido(1)">'+startTagP1+'Un Jugador&nbsp;'+endTagP1+'</span> &nbsp;&nbsp;|&nbsp;&nbsp;<span id="dosJugadores" onmouseup="resetPartido(2)">'+startTagP2+'Dos Jugadores&nbsp;'+endTagP2+'</span>');
+			
+			pos_x = 400;
+			pos_y = 250;
+			controlInicio = 0;
+		}
+	
 	$(document).ready(function(){
 		
 		$pelota = $('#pelota');
@@ -23,12 +62,34 @@
 		pointJ1 = 0;
 		pointJ2 = 0;
 		
+		keyPressP1 = 0;
+		keyPressP2 = 0;
+		
+		cantidadDeJugadores = 1;
+		
 		//ControlInicio si es 0, genera dos numeros aleatorios para que la direccion de la pelota no sea siempre la misma.
 		//Despues da la primera vez que se activa, pasa a ser uno, hasta que se reinicie el juego
 		controlInicio = 0;
 		
 		$('#pointPlayer1').html(pointJ1);
 		$('#pointPlayer2').html(pointJ2);
+		
+		if(cantidadDeJugadores == 1)
+		{
+			startTagP1 = "<b>";
+			endTagP1 = "</b>";
+			startTagP2 = "";
+			endTagP2 = "";
+		}
+		if(cantidadDeJugadores == 2)
+		{
+			startTagP1 = "";
+			endTagP1 = "";
+			startTagP2 = "<b>";
+			endTagP2 = "</b>";
+		}
+			
+		$('#control1o2').html('<span id="unJugador" onmouseup="resetPartido(1)">'+startTagP1+'Un Jugador&nbsp;'+endTagP1+'</span> &nbsp;&nbsp;|&nbsp;&nbsp;<span id="dosJugadores" onmouseup="resetPartido(2)">'+startTagP2+'Dos Jugadores&nbsp;'+endTagP2+'</span>');
 		
 		//Colores iniciales de los jugadores.
 		//La pelota y la cancha se les da colores segun el clima que sea
@@ -102,10 +163,22 @@
 				
 			}
 			
+			if(keyPressP1 != 0)
+			{
+				moveP1();
+			}
+			
 			acelerar();
 			
-			//Control jugador automatico
-			controlPlayerAI();
+			if(cantidadDeJugadores == 1)
+			{
+				//Control jugador automatico
+				controlPlayerAI();
+			}
+			else
+			{
+				moveP2();
+			}
 			
 			//Imprime la posicion de la pelota en la pantalla
 			$pelota.css('top', pos_y + 'px');
@@ -113,6 +186,42 @@
 			$barraJ2.css('top', pos2 + "px");
 			
 		},20,true);
+		
+		function moveP1()
+		{
+			if(keyPressP1 == 1)
+			{
+				if((pos1-speed) > 48){
+					pos1 -= speed;
+					$barraJ1.css('top', pos1 + "px");
+				}
+			}
+			else if(keyPressP1 == 2)
+			{
+				if((pos1+speed) < 355){
+					pos1 += speed;
+					$barraJ1.css('top', pos1 + "px");
+				}
+			}
+		}
+		
+		function moveP2()
+		{
+			if(keyPressP2 == 1)
+			{
+				if((pos2-speed) > 48){
+					pos2 -= speed;
+					$barraJ2.css('top', pos2 + "px");
+				}
+			}
+			else if(keyPressP2 == 2)
+			{
+				if((pos2+speed) < 355){
+					pos2 += speed;
+					$barraJ2.css('top', pos2 + "px");
+				}
+			}
+		}
 		
 		function controlPlayerAI()
 		{
@@ -143,6 +252,7 @@
 			pointJ1 += 1;
 			reset();
 		}
+		
 		function ganaPunto2(){
 			pointJ2 += 1;
 			reset();
@@ -150,11 +260,13 @@
 		
 		//Reinician la posicion y la velocidad de la pelota, como tambien el controlInicio
 		function reset(){
+			
 			$('#gol').html("Gol!");
 			$('#gol').fadeIn();
 			$('#gol').fadeOut(1000);
 			$('#pointPlayer1').html(pointJ1.toString());
 			$('#pointPlayer2').html(pointJ2.toString());
+			
 			//controlInicio = 0;
 			
 			speedBall_x = 1 + Math.floor(Math.random() * 3);
@@ -293,28 +405,22 @@
 		//Velocidad de movimiento de la barra
 		speed = 5;
 		
-		/*
+		
 		//Jugador 2
 		$('body').keydown(function() {
 			switch(event.which) {
 				// 87 responde a la letra 'w'
 				case 87:
-					if((pos2-speed) > 48){
-						pos2 -= speed;
-						$barraJ2.css('top', pos2 + "px");
-					}
+					keyPressP2 = 1;
 					break;
 				// 83 responde a la letra 's'
 				case 83:
-					if((pos2+speed) < 355){
-						pos2 += speed;
-						$barraJ2.css('top', pos2 + "px");
-					}
+					keyPressP2 = 2;
 					break;
 			}
 			
 		});
-		*/
+		
 		
 		//Ver si se cambian las teclas de las flechas por que si la pagina tiene barra de desplazamiento,
 		//las teclas mueven el contenido de la pagina
@@ -325,23 +431,42 @@
 			
 				// 38 responde a la flecha para arriba
 				case 38:
-					if((pos1-speed) > 48){
+					keyPressP1 = 1;
+					/*if((pos1-speed) > 48){
 						pos1 -= speed;
 						$barraJ1.css('top', pos1 + "px");
-					}
+					}*/
 					break;
 					
 				// 40 responde a la flecha para abajo
 				case 40:
-					if((pos1+speed) < 355){
+					keyPressP1 = 2;
+					/*if((pos1+speed) < 355){
 						pos1 += speed;
 						$barraJ1.css('top', pos1 + "px");
-					}
+					}*/
 					break;
 		
 			}
 		});
 		
+		$('body').keyup(function() {
+			switch(event.which)
+			{
+				case 38:
+					keyPressP1 = 0;
+					break;
+				case 40:
+					keyPressP1 = 0;
+					break;
+				case 87:
+					keyPressP2 = 0;
+					break;
+				case 83:
+					keyPressP2 = 0;
+					break;
+			}
+		});
 		
 		//controlPause es 0 si no esta pausado, es 1 si el juego esta pausado
 		controlPause = 0;
@@ -384,28 +509,12 @@
 				case 82:
 					if(controlPause==1){
 						controlPause = 0;
-						resetPartido();
+						resetPartido(cantidadDeJugadores);
 					}
 					break;
 			}
 		});
 		
-		//Resetea el puntaje del partido. Como si se volviera a comenzar
-		function resetPartido(){
-			$('#aviso').html("");
-			$('#reset').html("");
-			
-			pointJ1 = 0;
-			pointJ2 = 0;
-			
-			$('#pointPlayer1').html(pointJ1);
-			$('#pointPlayer2').html(pointJ2);
-			
-			pos_x = 400;
-			pos_y = 250;
-			controlInicio = 0;
-		}
-
 		//Funciones para controlar el cambio de colores en los input de tipo color, cambiando el color de las barras, la pelota y la cancha
 		$('#colorJ1').change(function(){
 			$('#barraJ1').css('background',$('#colorJ1').val());
@@ -436,6 +545,8 @@
 <div id='barraJ1'></div>
 <div id='barraJ2'></div>
 <div id='pelota'></div>
+<div id="control1o2">
+</div>
 <div id="resultado">
 	Puntos 1:&nbsp;<span id="pointPlayer1"></span> &nbsp;&nbsp;|&nbsp;&nbsp;
 	Puntos 2:&nbsp;<span id="pointPlayer2"></span>
